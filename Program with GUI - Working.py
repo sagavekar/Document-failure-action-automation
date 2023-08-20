@@ -15,6 +15,7 @@ Assignee = {
     "MH" : "Masroor Hafiz",
 }
 
+# Function to handle inbound sheet
 def Inbound_auto(assignee_key, file_path):
     # Read the data
     df_inbound = pd.read_excel(file_path, sheet_name="Inbound Failures", skiprows=6)
@@ -203,6 +204,7 @@ def Inbound_auto(assignee_key, file_path):
 
     # win32api.MessageBox(0, notification_text, notification_title, win32con.MB_OK)
 
+# Function to handle outbound sheet
 def Outbound_auto(assignee_key, file_path):
     # Read the data
     df_outbound = pd.read_excel(file_path, sheet_name="Outbond failures", skiprows=5)
@@ -387,7 +389,7 @@ class GUI(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Doc failure automation | Omkar.sagavekar@gep.com")
-        self.setGeometry(150, 150, 450, 450)
+        self.setGeometry(100, 100, 750, 550)
 
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -401,6 +403,7 @@ class GUI(QMainWindow):
 
         self.file_label = QLabel("Selected File: ", self)
         self.file_label.setStyleSheet("color: white;font-size: 23px;")
+        self.file_label.setWordWrap(True)
         self.layout.addWidget(self.file_label)
 
         self.radio_buttons1 = []
@@ -413,12 +416,12 @@ class GUI(QMainWindow):
             self.radio_buttons1.append(radio)
             self.layout.addWidget(radio)
 
-        self.inbound_button = QPushButton("Inbound Auto", self)
+        self.inbound_button = QPushButton("Inbound - check with supplier", self)
         self.inbound_button.setStyleSheet("background-color: #333; color: white; padding: 10px;font-size: 23px;")
         self.inbound_button.clicked.connect(self.handle_inbound_auto)
         self.layout.addWidget(self.inbound_button)
 
-        self.outbound_button = QPushButton("Outbound Auto", self)
+        self.outbound_button = QPushButton("Outbound - check with supplier", self)
         self.outbound_button.setStyleSheet("background-color: #333; color: white; padding: 10px;font-size: 23px;")
         self.outbound_button.clicked.connect(self.handle_outbound_auto)
         self.layout.addWidget(self.outbound_button)
