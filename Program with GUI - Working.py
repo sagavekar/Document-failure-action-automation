@@ -2,10 +2,11 @@ import xlwings as xw
 from openpyxl import Workbook
 from datetime import datetime as DT
 import pandas as pd
-import win32com.client
+from win32com.client import Dispatch as win32com_client_Dispatch
 from os.path import abspath
-import re
-import sys
+from re import IGNORECASE, search
+from sys import argv as sys_argv
+from sys import exit as sys_exit
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QFileDialog, QLabel, QVBoxLayout, QWidget, QMessageBox
 
 Assignee = {
@@ -52,7 +53,7 @@ def Inbound_auto(assignee_key, file_path):
     """
 
     def email(P, target_wb_path):
-        ol = win32com.client.Dispatch("outlook.application")
+        ol = win32com_client_Dispatch("outlook.application") # from win32.client
         olmailitem = 0x0  # size of the new email
         newmail = ol.CreateItem(olmailitem)
         newmail.Subject = f"{P}_Inbound document failure GEP/{P.split('_')[0]}| Reporting_date {DT.now().strftime('%m.%d.%Y')}"
@@ -92,7 +93,9 @@ def Inbound_auto(assignee_key, file_path):
         """
         attach = target_wb_path
         newmail.Attachments.Add(attach)
-        newmail.Display()  # --> To display the mail before sending it
+        #newmail.Display()  # --> To display the mail 
+        newmail.Save()
+        newmail.Close(0) # 0 means close without sending
         # newmail.Send()
 
     for P in DBname_LegalCompanyName_PartnerCode:
@@ -225,7 +228,7 @@ def Outbound_auto(assignee_key, file_path):
 
 
     def email(P, target_wb_path,td_in_draft):
-        ol = win32com.client.Dispatch("outlook.application")
+        ol = win32com_client_Dispatch("outlook.application")  # from win32com.client
         olmailitem = 0x0  # size of the new email
         newmail = ol.CreateItem(olmailitem)
         newmail.Subject = f"{P}_PO document failure GEP/{P.split('_')[0]}| Reporting_date {DT.now().strftime('%m.%d.%Y')}"
@@ -268,7 +271,9 @@ def Outbound_auto(assignee_key, file_path):
         """
         attach = target_wb_path
         newmail.Attachments.Add(attach)
-        newmail.Display()  # --> To display the mail before sending it
+        #newmail.Display()  # --> To display the mail before sending it
+        newmail.Save()
+        newmail.Close(0)
         # newmail.Send()
 
     for P in DBname_LegalCompanyName_PartnerCode:
@@ -368,7 +373,7 @@ def Outbound_auto(assignee_key, file_path):
     for row in Outbond_failures.used_range.rows[6:]:
         if (
             row[3].value == Assignee.get(assignee_key)
-            and re.search('check with supplier', str(row[4].value), re.IGNORECASE)
+            and search('check with supplier', str(row[4].value),IGNORECASE) # re.search and re.IGNORECASE
             and row[5].value == "Pending"
         ):
             row[5].value = "Sending to supplier failed"
@@ -455,9 +460,9 @@ class GUI(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QApplication(sys_argv)
     window = GUI()
     window.show()
-    sys.exit(app.exec_())
+    sys_exit(app.exec_())
 
 
