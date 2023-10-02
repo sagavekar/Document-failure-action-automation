@@ -7,18 +7,21 @@ from os.path import abspath
 from re import IGNORECASE, search
 from sys import argv as sys_argv
 from sys import exit as sys_exit
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QFileDialog, QLabel, QVBoxLayout, QWidget, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QFileDialog, QLabel, QVBoxLayout, QWidget, QMessageBox, QProgressBar
 
 Assignee = {
-    "AY" : "Aditya Yadav",
-    "OS" : "Omkar Sagavekar",
-    "MH" : "Masroor Hafiz",
+    "AY": "Aditya Yadav",
+    "OS": "Omkar Sagavekar",
+    "MH": "Masroor Hafiz",
 }
 
 # Function to handle inbound sheet
+
+
 def Inbound_auto(assignee_key, file_path):
     # Read the data
-    df_inbound = pd.read_excel(file_path, sheet_name="Inbound Failures", skiprows=6)
+    df_inbound = pd.read_excel(
+        file_path, sheet_name="Inbound Failures", skiprows=6)
 
     # finding unique list of  DBname_LegalCompanyName_PartnerCode
     DBname_LegalCompanyName_PartnerCode = (
@@ -54,7 +57,8 @@ def Inbound_auto(assignee_key, file_path):
     """
 
     def email(P, target_wb_path):
-        ol = win32com_client_Dispatch("outlook.application") # from win32.client
+        ol = win32com_client_Dispatch(
+            "outlook.application")  # from win32.client
         olmailitem = 0x0  # size of the new email
         newmail = ol.CreateItem(olmailitem)
         newmail.Subject = f"{P}_Inbound document failure GEP/{P.split('_')[0]}| Reporting_date {DT.now().strftime('%m.%d.%Y')}"
@@ -94,14 +98,14 @@ def Inbound_auto(assignee_key, file_path):
         """
         attach = target_wb_path
         newmail.Attachments.Add(attach)
-        #newmail.Display()  # --> To display the mail 
+        # newmail.Display()  # --> To display the mail
         newmail.Save()
-        newmail.Close(0) # 0 means close without sending
+        newmail.Close(0)  # 0 means close without sending
         # newmail.Send()
 
     for P in DBname_LegalCompanyName_PartnerCode:
         # print(P)
-        book = Workbook() # book = openpyxl.Workbook()
+        book = Workbook()  # book = openpyxl.Workbook()
         # sheet = book.create_sheet(f'{P}')
         # supplier_worksheet.append(sheet)
 
@@ -141,7 +145,8 @@ def Inbound_auto(assignee_key, file_path):
 
         filtered_data = data_range[
             (data_range["Assignee"] == Assignee.get(assignee_key))
-            & (data_range["Responsibility"] == "Check with Supplier")  # Condition 1
+            # Condition 1
+            & (data_range["Responsibility"] == "Check with Supplier")
             & (data_range["Status"] == "Pending")  # Condition 2
             & (  # Condition 3
                 data_range["DBname_LegalCompanyName_PartnerCode"] == P
@@ -169,7 +174,8 @@ def Inbound_auto(assignee_key, file_path):
         target_ws = target_wb.sheets.active
 
         # Write the filtered data from the DataFrame to the target worksheet
-        target_ws.range("A1").options(index=False, header=True).value = selected_columns
+        target_ws.range("A1").options(
+            index=False, header=True).value = selected_columns
 
         # Autofit the "DateCreated" column
         # Assuming "DateCreated" is in column I
@@ -180,7 +186,7 @@ def Inbound_auto(assignee_key, file_path):
 
         # Save and close the target workbook
         target_wb.save()
-        target_wb_path = abspath(target_wb.fullname) # os.path.absoath
+        target_wb_path = abspath(target_wb.fullname)  # os.path.absoath
         target_wb.close()
 
         # calling email function
@@ -195,7 +201,7 @@ def Inbound_auto(assignee_key, file_path):
         ):
             row[7].value = "No Document Found"
             row[8].value = "As per Resolution Column - Email sent to supplier to check"
-            row[11].value = DT.now().strftime("%m/%d/%Y")
+            row[9].value = DT.now().strftime("%m/%d/%Y") #This will target the first action date
 
     # wb.save() --> if main file needs to autosave
     # wb.close()  --> if main file needs to close
@@ -205,9 +211,12 @@ def Inbound_auto(assignee_key, file_path):
     # win32api.MessageBox(0, notification_text, notification_title, win32con.MB_OK)
 
 # Function to handle outbound sheet
+
+
 def Outbound_auto(assignee_key, file_path):
     # Read the data
-    df_outbound = pd.read_excel(file_path, sheet_name="Outbond failures", skiprows=5)
+    df_outbound = pd.read_excel(
+        file_path, sheet_name="Outbond failures", skiprows=5)
     DBname_LegalCompanyName_PartnerCode = (
         df_outbound[
             (df_outbound["Assignee"] == Assignee.get(assignee_key))
@@ -228,9 +237,9 @@ def Outbound_auto(assignee_key, file_path):
     wb = xw.Book(file_path)
     Outbond_failures = wb.sheets["Outbond failures"]
 
-
-    def email(P, target_wb_path,td_in_draft):
-        ol = win32com_client_Dispatch("outlook.application")  # from win32com.client
+    def email(P, target_wb_path, td_in_draft):
+        ol = win32com_client_Dispatch(
+            "outlook.application")  # from win32com.client
         olmailitem = 0x0  # size of the new email
         newmail = ol.CreateItem(olmailitem)
         newmail.Subject = f"{P}_PO document failure GEP/{P.split('_')[0]}| Reporting_date {DT.now().strftime('%m.%d.%Y')}"
@@ -273,14 +282,14 @@ def Outbound_auto(assignee_key, file_path):
         """
         attach = target_wb_path
         newmail.Attachments.Add(attach)
-        #newmail.Display()  # --> To display the mail before sending it
+        # newmail.Display()  # --> To display the mail before sending it
         newmail.Save()
         newmail.Close(0)
         # newmail.Send()
 
     for P in DBname_LegalCompanyName_PartnerCode:
         # print(P)
-        book = Workbook() # book = Workbook()  # this is from opepyxl
+        book = Workbook()  # book = Workbook()  # this is from opepyxl
         # sheet = book.create_sheet(f'{P}')
         # supplier_worksheet.append(sheet)
 
@@ -306,25 +315,26 @@ def Outbound_auto(assignee_key, file_path):
         ).api.Font.Bold = True
         xw.Book(f"PO_{P}_{DT.now().strftime('%m.%d.%Y')}.xlsx").save()
         xw.Book(f"PO_{P}_{DT.now().strftime('%m.%d.%Y')}.xlsx").close()
-        
 
     for P in DBname_LegalCompanyName_PartnerCode:
         data_range = (
-            Outbond_failures.range("A6:X7")
+            Outbond_failures.range("A6:Y6")
             .expand()
             .options(pd.DataFrame, index=False, header=True)
             .value
         )
 
         filtered_data = data_range[
-            (data_range["Assignee"] == Assignee.get(assignee_key))  # Condition 1
+            (data_range["Assignee"] == Assignee.get(
+                assignee_key))  # Condition 1
             & (data_range["Status"] == "Pending")  # Condition 2
             & (
                 data_range["Error"].str.contains(
                     "check with supplier", case=False, regex=True
                 )
             )  # Condition 3
-            & (data_range["DBname_LegalCompanyName_PartnerCode"] == P)  # Condition 4
+            # Condition 4
+            & (data_range["DBname_LegalCompanyName_PartnerCode"] == P)
         ]
 
         selected_columns = filtered_data[
@@ -353,19 +363,20 @@ def Outbound_auto(assignee_key, file_path):
         target_ws = target_wb.sheets.active
 
         # Write the filtered data from the DataFrame to the target worksheet
-        target_ws.range("A1").options(index=False, header=True).value = selected_columns
+        target_ws.range("A1").options(
+            index=False, header=True).value = selected_columns
 
         # Autofit the "DateModified" column
         # Assuming "DateModified" is in column F
         target_ws.range("F:F").autofit()
-        target_ws.range("B:B").autofit() # Error column
+        target_ws.range("B:B").autofit()  # Error column
 
         # Disable text wrapping for the specified named range
         target_ws.range("A:I").api.WrapText = False
 
         # Save and close the target workbook
         target_wb.save()
-        target_wb_path = abspath(target_wb.fullname) # os.path.abspath
+        target_wb_path = abspath(target_wb.fullname)  # os.path.abspath
         target_wb.close()
 
         # calling email function
@@ -375,15 +386,17 @@ def Outbound_auto(assignee_key, file_path):
     for row in Outbond_failures.used_range.rows[6:]:
         if (
             row[3].value == Assignee.get(assignee_key)
-            and search('check with supplier', str(row[4].value),IGNORECASE) # re.search and re.IGNORECASE
+            # re.search and re.IGNORECASE
+            and search('check with supplier', str(row[4].value), IGNORECASE)
             and row[5].value == "Pending"
         ):
-            row[5].value = "Sending to supplier failed"
-            row[6].value = "As per Resolution Column - Email sent to supplier to check"
-            row[7].value = DT.now().strftime("%m/%d/%Y")
+            row[5].value = "In process"
+            row[6].value = "Sending to supplier failed"
+            row[7].value = "As per Resolution Column - Email sent to supplier to check"
+            row[8].value = DT.now().strftime("%m/%d/%Y")
 
 
-#------Buidling the GUI ----------------
+# ------Buidling the GUI ----------------
 class GUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -397,10 +410,11 @@ class GUI(QMainWindow):
         self.layout = QVBoxLayout()
 
         self.browse_button = QPushButton("Browse", self)
-        self.browse_button.setStyleSheet("background-color: #333; color: white; padding: 10px;font-size: 23px;")
+        self.browse_button.setStyleSheet(
+            "background-color: #333; color: white; padding: 10px;font-size: 23px;")
         self.browse_button.clicked.connect(self.browse_file)
         self.layout.addWidget(self.browse_button)
-
+        
         self.file_label = QLabel("Selected File: ", self)
         self.file_label.setStyleSheet("color: white;font-size: 23px;")
         self.file_label.setWordWrap(True)
@@ -412,17 +426,22 @@ class GUI(QMainWindow):
         for key in Assignee:
             radio = QRadioButton(Assignee[key], self)
             radio.setStyleSheet("color: white;font-size: 23px;")
-            radio.toggled.connect(lambda checked, button=radio, key=key: self.radio_button_selected(key, button))
+            radio.toggled.connect(
+                lambda checked, button=radio, key=key: self.radio_button_selected(key, button))
             self.radio_buttons1.append(radio)
             self.layout.addWidget(radio)
 
-        self.inbound_button = QPushButton("Inbound - check with supplier", self)
-        self.inbound_button.setStyleSheet("background-color: #333; color: white; padding: 10px;font-size: 23px;")
+        self.inbound_button = QPushButton(
+            "Inbound - check with supplier", self)
+        self.inbound_button.setStyleSheet(
+            "background-color: #333; color: white; padding: 10px;font-size: 23px;")
         self.inbound_button.clicked.connect(self.handle_inbound_auto)
         self.layout.addWidget(self.inbound_button)
 
-        self.outbound_button = QPushButton("Outbound - check with supplier", self)
-        self.outbound_button.setStyleSheet("background-color: #333; color: white; padding: 10px;font-size: 23px;")
+        self.outbound_button = QPushButton(
+            "Outbound - check with supplier", self)
+        self.outbound_button.setStyleSheet(
+            "background-color: #333; color: white; padding: 10px;font-size: 23px;")
         self.outbound_button.clicked.connect(self.handle_outbound_auto)
         self.layout.addWidget(self.outbound_button)
 
@@ -432,10 +451,12 @@ class GUI(QMainWindow):
     def browse_file(self):
         file_dialog = QFileDialog(self)
         file_dialog.setNameFilter("Excel files (*.xlsx)")
-        file_dialog.setFileMode(QFileDialog.ExistingFile)  # Restrict to existing files
+        # Restrict to existing files
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
         file_path, _ = file_dialog.getOpenFileName()
         if file_path:
             self.file_label.setText("Selected File: " + file_path)
+                   
 
     def radio_button_selected(self, assignee_key, button):
         if button.isChecked():
@@ -445,21 +466,26 @@ class GUI(QMainWindow):
             self.selected_radio_button = None
             self.selected_assignee_key = None
 
-
     def handle_inbound_auto(self):
-        if self.selected_radio_button and self.file_label.text() != "Selected File: ": # this to avoid calling belo function if button is not select and file path / file lable in not selected
-            
-            assignee_key = next(key for key, value in Assignee.items() if value == self.selected_radio_button.text())
+        # this to avoid calling belo function if button is not select and file path / file lable in not selected
+        if self.selected_radio_button and self.file_label.text() != "Selected File: ":
+
+            assignee_key = next(key for key, value in Assignee.items(
+            ) if value == self.selected_radio_button.text())
             file_path = self.file_label.text().replace("Selected File: ", "")
             Inbound_auto(assignee_key, file_path)
-            QMessageBox.information(self, "Alert", "Inbound action completed ! Please check email draft")
+            QMessageBox.information(
+                self, "Alert", "Inbound action completed ! Please check email draft")
 
     def handle_outbound_auto(self):
-        if self.selected_radio_button and self.file_label.text() != "Selected File: ": # this to avoid calling belo function if button is not select and file path / file lable in not selected
-            assignee_key = next(key for key, value in Assignee.items() if value == self.selected_radio_button.text())
+        # this to avoid calling belo function if button is not select and file path / file lable in not selected
+        if self.selected_radio_button and self.file_label.text() != "Selected File: ":
+            assignee_key = next(key for key, value in Assignee.items(
+            ) if value == self.selected_radio_button.text())
             file_path = self.file_label.text().replace("Selected File: ", "")
             Outbound_auto(assignee_key, file_path)
-            QMessageBox.information(self, "Alert", "Outbound action completed ! Please check email draft")
+            QMessageBox.information(
+                self, "Alert", "Outbound action completed ! Please check email draft")
 
 
 if __name__ == "__main__":
@@ -467,5 +493,3 @@ if __name__ == "__main__":
     window = GUI()
     window.show()
     sys_exit(app.exec_())
-
-
